@@ -1,0 +1,1731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meeting Reminder</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <!-- FullCalendar CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css">
+    <style>
+        :root {
+            --primary-color: #4e73df;
+            --secondary-color: #f8f9fc;
+            --accent-color: #2e59d9;
+            --text-color: #5a5c69;
+            --danger-color: #e74a3b;
+            --success-color: #1cc88a;
+            --warning-color: #f6c23e;
+        }
+        
+        body {
+            font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+        }
+        
+        .dashboard-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+            animation: fadeInDown 0.5s;
+        }
+        
+        .calendar-container {
+            background-color: white;
+            border-radius: 0.35rem;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            animation: fadeIn 0.8s;
+            transition: all 0.3s ease;
+        }
+        
+        .calendar-container:hover {
+            box-shadow: 0 0.5rem 2rem 0 rgba(58, 59, 69, 0.2);
+        }
+        
+        .booked-dates-container {
+            background-color: white;
+            border-radius: 0.35rem;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
+            padding: 2rem;
+            animation: fadeInUp 0.8s;
+        }
+        
+        .fc .fc-toolbar-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .fc .fc-button {
+            background-color: var(--primary-color);
+            border: none;
+            transition: all 0.3s ease;
+        }
+        
+        .fc .fc-button:hover {
+            background-color: var(--accent-color);
+            transform: translateY(-2px);
+        }
+        
+        .fc .fc-daygrid-day.fc-day-today {
+            background-color: rgba(78, 115, 223, 0.1);
+        }
+        
+        .fc .fc-daygrid-day:hover {
+            background-color: rgba(78, 115, 223, 0.05);
+            cursor: pointer;
+        }
+        
+        /* Improved event display in calendar */
+        .fc-daygrid-day-has-events {
+            background-color: rgba(46, 204, 112, 0.651) !important;
+        }
+        
+        .fc-daygrid-day-has-events .fc-daygrid-day-frame {
+            background-color: transparent !important;
+        }
+        
+        .fc-daygrid-day-has-events .fc-daygrid-day-number {
+            font-weight: bold;
+            color: var(--text-color) !important;
+        }
+        
+        .fc-daygrid-day-has-events:hover {
+            background-color: rgba(64, 204, 46, 0.507) !important;
+        }
+        
+        /* Improved event title display */
+        .fc-daygrid-event {
+            margin: 2px 4px !important;
+            border-radius: 4px !important;
+            padding: 2px 4px !important;
+        }
+        
+        .fc-event-title {
+            white-space: normal !important;
+            font-size: 0.85rem;
+            padding: 2px 0;
+            display: block;
+        }
+        
+        .fc-event-time {
+            display: none !important;
+        }
+        
+        .modal-content {
+            border: none;
+            box-shadow: 0 0.5rem 2rem 0 rgba(58, 59, 69, 0.2);
+            animation: zoomIn 0.3s;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border: none;
+            padding: 0.5rem 1.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--accent-color);
+            transform: translateY(-2px);
+        }
+        
+        .btn-danger {
+            background-color: var(--danger-color);
+            border: none;
+            padding: 0.5rem 1.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-danger:hover {
+            background-color: #c23a2d;
+            transform: translateY(-2px);
+        }
+        
+        .btn-warning {
+            background-color: var(--warning-color);
+            border: none;
+            padding: 0.5rem 1.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-warning:hover {
+            background-color: #d6a520;
+            transform: translateY(-2px);
+        }
+        
+        .event-card {
+            transition: all 0.3s ease;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .event-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+        }
+        
+        .section-work {
+            border-left-color: var(--danger-color);
+        }
+        
+        .section-personal {
+            border-left-color: var(--success-color);
+        }
+        
+        .section-meeting {
+            border-left-color: var(--warning-color);
+        }
+        
+        .empty-state {
+            opacity: 0.6;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 0.8; }
+            100% { opacity: 0.6; }
+        }
+        
+        #calendar {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+        
+        /* Admin Login Page Styles */
+        .login-container {
+            max-width: 500px;
+            margin: 5rem auto;
+            animation: fadeIn 0.8s;
+        }
+        
+        .login-card {
+            border: none;
+            border-radius: 0.5rem;
+            box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transform: translateY(0);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .login-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0.75rem 2rem rgba(0, 0, 0, 0.15);
+        }
+        
+        .login-header {
+            background: linear-gradient(135deg, var(--danger-color) 0%, #c23a2d 100%);
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        
+        .login-body {
+            padding: 2rem;
+            background-color: white;
+        }
+        
+        .form-floating label {
+            color: #6c757d;
+        }
+        
+        .btn-login {
+            background-color: var(--danger-color);
+            border: none;
+            padding: 0.75rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-login:hover {
+            background-color: #c23a2d;
+            transform: translateY(-2px);
+        }
+        
+        .admin-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            animation: fadeIn 0.8s;
+        }
+        
+        .admin-header {
+            background: linear-gradient(135deg, var(--danger-color) 0%, #c23a2d 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem 0.5rem 0 0;
+            margin-bottom: 0;
+            animation: fadeInDown 0.5s;
+        }
+        
+        .admin-card {
+            border-radius: 0 0 0.5rem 0.5rem;
+            box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.1);
+            animation: fadeInUp 0.5s;
+        }
+        
+        .admin-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+        
+        .shake {
+            animation: shake 0.5s;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+        
+        @keyframes floating {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .time-inputs {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .time-inputs .form-floating {
+            flex: 1;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 2rem;
+            height: 2rem;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* New styles for admin notice board */
+        .admin-notice-board {
+            background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+            color: #856404;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+            border-left: 5px solid #ff5722;
+            box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.1);
+            animation: pulse 2s infinite;
+        }
+        
+        .admin-notice-board h5 {
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+        
+        .admin-notice-board h5 i {
+            margin-right: 0.5rem;
+            font-size: 1.2rem;
+        }
+        
+        .admin-notice-board p {
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+        
+        .admin-notice-board .btn {
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+            padding: 0.25rem 0.75rem;
+        }
+        
+        /* Fix for edit button styling */
+        .edit-single-event {
+            transition: all 0.3s ease;
+        }
+        
+        .edit-single-event:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+        }
+        
+        .permission-error {
+            background: linear-gradient(135deg, #e74a3b 0%, #c23a2d 100%);
+            color: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+            border-left: 5px solid #ff5722;
+        }
+        
+        /* Edit Meeting Page Styles */
+        .edit-meeting-container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            animation: fadeIn 0.8s;
+        }
+        
+        .edit-meeting-header {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem 0.5rem 0 0;
+            margin-bottom: 0;
+            animation: fadeInDown 0.5s;
+        }
+        
+        .edit-meeting-card {
+            border-radius: 0 0 0.5rem 0.5rem;
+            box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.1);
+            animation: fadeInUp 0.5s;
+        }
+        
+        .edit-notice-board {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            color: #085e6d;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+            border-left: 5px solid #0b7a8f;
+            box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.1);
+            animation: pulse 2s infinite;
+        }
+        
+        /* View mode for event modal */
+        .view-mode .form-control {
+            background-color: #f8f9fa;
+            pointer-events: none;
+        }
+        
+        .view-mode textarea.form-control {
+            resize: none;
+        }
+        
+        /* Toggle between view and edit mode */
+        .edit-mode-toggle {
+            position: absolute;
+            top: 15px;
+            right: 60px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Main Dashboard (Default View) -->
+    <div id="dashboardView">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h1 class="animate__animated animate__fadeInLeft"><i class="far fa-calendar-alt me-2"></i> Meeting Room Reservation</h1>
+                        <p class="lead mb-0 animate__animated animate__fadeInLeft animate__delay-1s">Manage your schedule and appointments</p>
+                    </div>
+                    <div class="col-md-4 text-end animate__animated animate__fadeInRight">
+                        <button class="btn btn-warning me-2" id="editMeetingBtn"><i class="fas fa-edit me-1"></i> EDIT Meeting</button>
+                        <button class="btn btn-danger" id="adminBtn"><i class="fas fa-lock me-1"></i> Admin</button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="container">
+            <!-- Calendar -->
+            <div class="calendar-container animate__animated animate__fadeIn">
+                <div id="calendar"></div>
+            </div>
+
+            <!-- Booked Dates -->
+            <div class="booked-dates-container">
+                <h3 class="mb-4"><i class="fas fa-bookmark me-2"></i> Upcoming Events</h3>
+                <div id="bookedDatesList">
+                    <div class="text-center py-4">
+                        <div class="loading-spinner text-primary mb-2"></div>
+                        <p>Loading events...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add/Edit Event Modal -->
+        <div class="modal fade" id="eventModal" tabindex="-1" aria-labelledby="eventModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title" id="eventModalLabel">Add New Event</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="eventForm">
+                            <input type="hidden" id="eventId">
+                            <div class="mb-3">
+                                <label for="eventTitle" class="form-label">Event Title*</label>
+                                <input type="text" class="form-control" id="eventTitle" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="eventSection" class="form-label">Section*</label>
+                                <input type="text" class="form-control" id="eventSection" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Date: <span id="displayDate"></span></label>
+                                <input type="hidden" id="eventDate">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Time*</label>
+                                <div class="time-inputs">
+                                    <div class="form-floating">
+                                        <input type="time" class="form-control" id="startTime" required>
+                                        <label for="startTime">Start Time</label>
+                                    </div>
+                                    <div class="form-floating">
+                                        <input type="time" class="form-control" id="endTime" required>
+                                        <label for="endTime">End Time</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="eventNotes" class="form-label">Notes (Optional)</label>
+                                <textarea class="form-control" id="eventNotes" rows="3"></textarea>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="saveEventBtn">Save Event</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Confirmation Toast -->
+        <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+            <div id="confirmationToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header bg-success text-white">
+                    <strong class="me-auto">Success</strong>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body">
+                    Event saved successfully!
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Login View (Hidden by default) -->
+    <div id="loginView" style="display: none;">
+        <div class="login-container">
+            <div class="login-card">
+                <div class="login-header">
+                    <h2><i class="fas fa-lock me-2"></i> Admin Login</h2>
+                    <p class="mb-0">Enter your credentials to access admin panel</p>
+                </div>
+                <div class="login-body">
+                    <form id="loginForm">
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control" id="username" placeholder="Username" required>
+                            <label for="username">Username</label>
+                        </div>
+                        <div class="form-floating mb-4">
+                            <input type="password" class="form-control" id="password" placeholder="Password" required>
+                            <label for="password">Password</label>
+                        </div>
+                        <button type="submit" class="btn btn-login btn-lg w-100 text-white">
+                            <i class="fas fa-sign-in-alt me-2"></i> Login
+                        </button>
+                    </form>
+                    <div class="text-center mt-3">
+                        <button id="backToDashboard" class="btn btn-link">Back to Dashboard</button>
+                    </div>
+                </div>
+            </div>
+            <div id="loginError" class="alert alert-danger mt-3 d-none animate__animated animate__shakeX">
+                <i class="fas fa-exclamation-circle me-2"></i> Invalid username or password!
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Meeting Login View (Hidden by default) -->
+    <div id="editMeetingLoginView" style="display: none;">
+        <div class="login-container">
+            <div class="login-card">
+                <div class="login-header" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);">
+                    <h2><i class="fas fa-edit me-2"></i> Edit Meeting Login</h2>
+                    <p class="mb-0">Enter your credentials to edit meetings</p>
+                </div>
+                <div class="login-body">
+                    <form id="editMeetingLoginForm">
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control" id="editUsername" placeholder="Username" required>
+                            <label for="editUsername">Username</label>
+                        </div>
+                        <div class="form-floating mb-4">
+                            <input type="password" class="form-control" id="editPassword" placeholder="Password" required>
+                            <label for="editPassword">Password</label>
+                        </div>
+                        <button type="submit" class="btn btn-info btn-lg w-100 text-white">
+                            <i class="fas fa-sign-in-alt me-2"></i> Login
+                        </button>
+                    </form>
+                    <div class="text-center mt-3">
+                        <button id="backToDashboardFromEditLogin" class="btn btn-link">Back to Dashboard</button>
+                    </div>
+                </div>
+            </div>
+            <div id="editMeetingLoginError" class="alert alert-danger mt-3 d-none animate__animated animate__shakeX">
+                <i class="fas fa-exclamation-circle me-2"></i> Invalid username or password!
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Panel View (Hidden by default) -->
+    <div id="adminView" style="display: none;">
+        <div class="admin-container">
+            <div class="admin-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h2 class="mb-0"><i class="fas fa-user-shield me-2"></i> Admin Panel</h2>
+                    <button id="logoutBtn" class="btn btn-light btn-sm">
+                        <i class="fas fa-sign-out-alt me-1"></i> Logout
+                    </button>
+                </div>
+            </div>
+           
+                    
+                    <!-- Permission Error Notice -->
+                    <div id="permissionError" class="permission-error d-none">
+                        <h5><i class="fas fa-exclamation-circle me-2"></i> DATABASE PERMISSION ERROR</h5>
+                        <p class="mb-2">Unable to edit events due to database permissions. Please check your Firebase Firestore rules.</p>
+                        <button id="checkPermissionsBtn" class="btn btn-light btn-sm">
+                            <i class="fas fa-cog me-1"></i> Check Permissions
+                        </button>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i> All Events</h5>
+                        <button id="deleteAllBtn" class="btn btn-danger btn-sm">
+                            <i class="fas fa-trash-alt me-1"></i> Delete All Events
+                        </button>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Category</th>
+                                    <th>Date</th>
+                                    <th>Start Time</th>
+                                    <th>End Time</th>
+                                    <th>Notes</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminEventsTable">
+                                <tr>
+                                    <td colspan="7" class="text-center py-4">
+                                        <div class="loading-spinner text-primary mb-2"></div>
+                                        <p>Loading events...</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div id="adminEmptyState" class="empty-state text-center py-5 d-none">
+                        <div class="floating">
+                            <i class="fas fa-calendar-times fa-4x mb-3 text-muted"></i>
+                        </div>
+                        <h4 class="text-muted">No events found</h4>
+                        <p class="text-muted">All events will appear here</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Meeting Panel View (Hidden by default) -->
+    <div id="editMeetingView" style="display: none;">
+        <div class="edit-meeting-container">
+            <div class="edit-meeting-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h2 class="mb-0"><i class="fas fa-edit me-2"></i> Edit Meeting Panel</h2>
+                    <button id="logoutEditBtn" class="btn btn-light btn-sm">
+                        <i class="fas fa-sign-out-alt me-1"></i> Logout
+                    </button>
+                </div>
+            </div>
+            <div class="edit-meeting-card card">
+                <div class="card-body">
+                    <!-- Edit Notice Board -->
+                    <div class="edit-notice-board animate__animated animate__pulse">
+                        <h5><i class="fas fa-exclamation-triangle"></i> EDIT MEETING PANEL</h5>
+                        <p class="mb-2">You can view and edit meeting details from this panel.</p>
+                    </div>
+                    
+                    <!-- Permission Error Notice -->
+                    <div id="editPermissionError" class="permission-error d-none">
+                        <h5><i class="fas fa-exclamation-circle me-2"></i> DATABASE PERMISSION ERROR</h5>
+                        <p class="mb-2">Unable to edit events due to database permissions. Please check your Firebase Firestore rules.</p>
+                        <button id="editCheckPermissionsBtn" class="btn btn-light btn-sm">
+                            <i class="fas fa-cog me-1"></i> Check Permissions
+                        </button>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i> All Events</h5>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Category</th>
+                                    <th>Date</th>
+                                    <th>Start Time</th>
+                                    <th>End Time</th>
+                                    <th>Notes</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="editEventsTable">
+                                <tr>
+                                    <td colspan="7" class="text-center py-4">
+                                        <div class="loading-spinner text-primary mb-2"></div>
+                                        <p>Loading events...</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div id="editEmptyState" class="empty-state text-center py-5 d-none">
+                        <div class="floating">
+                            <i class="fas fa-calendar-times fa-4x mb-3 text-muted"></i>
+                        </div>
+                        <h4 class="text-muted">No events found</h4>
+                        <p class="text-muted">All events will appear here</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View/Edit Event Modal -->
+    <div class="modal fade" id="viewEditEventModal" tabindex="-1" aria-labelledby="viewEditEventModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content" id="viewEditModalContent">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title" id="viewEditEventModalLabel">View Event Details</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn btn-outline-light btn-sm edit-mode-toggle" id="toggleEditModeBtn">
+                        <i class="fas fa-edit me-1"></i> Edit
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="viewEditEventForm">
+                        <input type="hidden" id="viewEditEventId">
+                        <div class="mb-3">
+                            <label for="viewEditEventTitle" class="form-label">Event Title</label>
+                            <input type="text" class="form-control" id="viewEditEventTitle" readonly>
+                        </div>
+                        <div class="mb-3">
+                                <label for="eventSection" class="form-label">Section*</label>
+                                <input type="text" class="form-control" id="eventSection" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Date: <span id="viewEditDisplayDate"></span></label>
+                            <input type="hidden" id="viewEditEventDate">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Time</label>
+                            <div class="time-inputs">
+                                <div class="form-floating">
+                                    <input type="time" class="form-control" id="viewEditStartTime" readonly>
+                                    <label for="viewEditStartTime">Start Time</label>
+                                </div>
+                                <div class="form-floating">
+                                    <input type="time" class="form-control" id="viewEditEndTime" readonly>
+                                    <label for="viewEditEndTime">End Time</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="viewEditEventNotes" class="form-label">Notes</label>
+                            <textarea class="form-control" id="viewEditEventNotes" rows="3" readonly></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="saveEditEventBtn" style="display: none;">
+                        <i class="fas fa-save me-1"></i> Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title"><i class="fas fa-exclamation-triangle me-2"></i> Confirm Deletion</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete this event? This action cannot be undone.</p>
+                    <div class="alert alert-warning mt-3">
+                        <i class="fas fa-info-circle me-2"></i> Deleting this event will remove it permanently.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete All Confirmation Modal -->
+    <div class="modal fade" id="deleteAllConfirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title"><i class="fas fa-exclamation-triangle me-2"></i> Confirm Deletion</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete ALL events? This action cannot be undone.</p>
+                    <div class="alert alert-danger mt-3">
+                        <i class="fas fa-exclamation-circle me-2"></i> This will permanently remove all events from the system.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteAllBtn">Delete All</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Toast -->
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+        <div id="successToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header bg-success text-white">
+                <strong class="me-auto">Success</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="successToastBody">
+                Operation completed successfully!
+            </div>
+        </div>
+    </div>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- FullCalendar JS -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyD5bGclilUgQp436Sn5KE7HMfepc1zVkuo",
+            authDomain: "reminder-35340.firebaseapp.com",
+            projectId: "reminder-35340",
+            storageBucket: "reminder-35340.appspot.com",
+            messagingSenderId: "792710311738",
+            appId: "1:792710311738:web:6a75fe55f06ef8e5e2ea03",
+            measurementId: "G-4YLQPB5FP8"
+        };
+
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Declare calendar variable at the top level
+        let calendar;
+        let currentEventId = null;
+        let eventModal = null;
+        let viewEditEventModal = null;
+        let deleteConfirmModal = null;
+        let deleteAllConfirmModal = null;
+        let isEditMode = false;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize modals
+            eventModal = new bootstrap.Modal(document.getElementById('eventModal'));
+            viewEditEventModal = new bootstrap.Modal(document.getElementById('viewEditEventModal'));
+            deleteConfirmModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+            deleteAllConfirmModal = new bootstrap.Modal(document.getElementById('deleteAllConfirmModal'));
+            
+            // Initialize calendar
+            const calendarEl = document.getElementById('calendar');
+            calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                dateClick: function(info) {
+                    // Set the clicked date in the modal
+                    const clickedDate = info.dateStr;
+                    $('#eventDate').val(clickedDate);
+                    $('#displayDate').text(formatDisplayDate(clickedDate));
+                    
+                    // Reset form and set modal title
+                    $('#eventForm')[0].reset();
+                    $('#eventModalLabel').text('Add New Event');
+                    $('#eventId').val('');
+                    currentEventId = null;
+                    
+                    // Set default times (current time and one hour ahead)
+                    const now = new Date();
+                    const startTime = now.toTimeString().substr(0, 5);
+                    now.setHours(now.getHours() + 1);
+                    const endTime = now.toTimeString().substr(0, 5);
+                    
+                    $('#startTime').val(startTime);
+                    $('#endTime').val(endTime);
+                    
+                    // Enable form fields for adding new event
+                    $('#eventTitle').prop('disabled', false);
+                    $('#eventSection').prop('disabled', false);
+                    $('#startTime').prop('disabled', false);
+                    $('#endTime').prop('disabled', false);
+                    $('#eventNotes').prop('disabled', false);
+                    $('#saveEventBtn').show();
+                    
+                    // Show the modal with animation
+                    eventModal.show();
+                },
+                events: function(fetchInfo, successCallback, failureCallback) {
+                    // Load events from Firestore
+                    db.collection("events").get().then((querySnapshot) => {
+                        const events = [];
+                        querySnapshot.forEach((doc) => {
+                            const event = doc.data();
+                            events.push({
+                                id: doc.id,
+                                title: event.title,
+                                start: event.date,
+                                allDay: true, // Make events all-day to hide time
+                                color: getSectionColor(event.section),
+                                extendedProps: {
+                                    section: event.section,
+                                    notes: event.notes
+                                }
+                            });
+                        });
+                        successCallback(events);
+                    }).catch((error) => {
+                        console.error("Error getting events: ", error);
+                        failureCallback(error);
+                    });
+                },
+                eventClick: function(info) {
+                    // Load event data into view modal for viewing only
+                    const event = info.event;
+                    currentEventId = event.id;
+                    
+                    // Get the time from Firestore (since we're not displaying it in the calendar)
+                    db.collection("events").doc(event.id).get()
+                        .then((doc) => {
+                            if (doc.exists) {
+                                const eventData = doc.data();
+                                
+                                // Fill view modal with event data
+                                openViewEditModal(doc.id, eventData, false);
+                            }
+                        })
+                        .catch((error) => {
+                            console.error("Error getting event: ", error);
+                            showToast('Error loading event details', 'danger');
+                        });
+                },
+                eventDidMount: function(info) {
+                    // Highlight the entire day cell when it has events
+                    const dayEl = info.el.closest('.fc-daygrid-day');
+                    if (dayEl) {
+                        dayEl.classList.add('fc-daygrid-day-has-events');
+                    }
+                    
+                    // Improve event title display
+                    const titleEl = info.el.querySelector('.fc-event-title');
+                    if (titleEl) {
+                        titleEl.textContent = info.event.title;
+                    }
+                }
+            });
+            
+            calendar.render();
+            
+            // Load booked events from Firestore
+            loadBookedEvents();
+            
+            // Save event button click handler
+            $('#saveEventBtn').click(function() {
+                if ($('#eventForm')[0].checkValidity()) {
+                    // Validate that end time is after start time
+                    const startTime = $('#startTime').val();
+                    const endTime = $('#endTime').val();
+                    
+                    if (startTime >= endTime) {
+                        alert('End time must be after start time');
+                        return;
+                    }
+                    
+                    saveEvent();
+                } else {
+                    $('#eventForm')[0].reportValidity();
+                }
+            });
+            
+            // Admin button click handler
+            $('#adminBtn').click(function() {
+                $('#dashboardView').hide();
+                $('#loginView').show();
+                $('#adminView').hide();
+                $('#editMeetingView').hide();
+                $('#editMeetingLoginView').hide();
+            });
+            
+            // Edit Meeting button click handler
+            $('#editMeetingBtn').click(function() {
+                $('#dashboardView').hide();
+                $('#loginView').hide();
+                $('#adminView').hide();
+                $('#editMeetingView').hide();
+                $('#editMeetingLoginView').show();
+            });
+            
+            // Back to dashboard button from login
+            $('#backToDashboard').click(function() {
+                $('#dashboardView').show();
+                $('#loginView').hide();
+                $('#adminView').hide();
+                $('#editMeetingView').hide();
+                $('#editMeetingLoginView').hide();
+                // Refresh the calendar when returning to dashboard
+                calendar.refetchEvents();
+                loadBookedEvents();
+            });
+            
+            // Back to dashboard button from edit meeting login
+            $('#backToDashboardFromEditLogin').click(function() {
+                $('#dashboardView').show();
+                $('#loginView').hide();
+                $('#adminView').hide();
+                $('#editMeetingView').hide();
+                $('#editMeetingLoginView').hide();
+                // Refresh the calendar when returning to dashboard
+                calendar.refetchEvents();
+                loadBookedEvents();
+            });
+            
+            // Login form submission
+            $('#loginForm').submit(function(e) {
+                e.preventDefault();
+                const username = $('#username').val();
+                const password = $('#password').val();
+                
+                // Hardcoded credentials (admin1/pass1)
+                if (username === 'admin1' && password === 'pass1') {
+                    $('#loginError').addClass('d-none');
+                    $('#loginView').hide();
+                    $('#adminView').show();
+                    loadAdminEvents();
+                } else {
+                    $('#loginError').removeClass('d-none');
+                    $('#loginForm').addClass('animate__animated animate__shakeX');
+                    setTimeout(function() {
+                        $('#loginForm').removeClass('animate__animated animate__shakeX');
+                    }, 1000);
+                }
+            });
+            
+            // Edit Meeting Login form submission
+            $('#editMeetingLoginForm').submit(function(e) {
+                e.preventDefault();
+                const username = $('#editUsername').val();
+                const password = $('#editPassword').val();
+                
+                // Hardcoded credentials (admin1/pass1)
+                if (username === 'admin1' && password === 'pass1') {
+                    $('#editMeetingLoginError').addClass('d-none');
+                    $('#editMeetingLoginView').hide();
+                    $('#editMeetingView').show();
+                    loadEditEvents();
+                } else {
+                    $('#editMeetingLoginError').removeClass('d-none');
+                    $('#editMeetingLoginForm').addClass('animate__animated animate__shakeX');
+                    setTimeout(function() {
+                        $('#editMeetingLoginForm').removeClass('animate__animated animate__shakeX');
+                    }, 1000);
+                }
+            });
+            
+            // Logout button from admin panel
+            $('#logoutBtn').click(function() {
+                $('#dashboardView').show();
+                $('#loginView').hide();
+                $('#adminView').hide();
+                $('#editMeetingView').hide();
+                $('#editMeetingLoginView').hide();
+                $('#username').val('');
+                $('#password').val('');
+                // Refresh the calendar when logging out
+                calendar.refetchEvents();
+                loadBookedEvents();
+            });
+            
+            // Logout button from edit meeting panel
+            $('#logoutEditBtn').click(function() {
+                $('#dashboardView').show();
+                $('#loginView').hide();
+                $('#adminView').hide();
+                $('#editMeetingView').hide();
+                $('#editMeetingLoginView').hide();
+                $('#editUsername').val('');
+                $('#editPassword').val('');
+                // Refresh the calendar when logging out
+                calendar.refetchEvents();
+                loadBookedEvents();
+            });
+            
+            // Delete all events button
+            $('#deleteAllBtn').click(function() {
+                db.collection("events").get().then((querySnapshot) => {
+                    if (querySnapshot.empty) {
+                        showToast('No events to delete', 'info');
+                        return;
+                    }
+                    
+                    deleteAllConfirmModal.show();
+                });
+            });
+            
+            // Confirm delete all button
+            $('#confirmDeleteAllBtn').click(function() {
+                // Delete all documents in the "events" collection
+                db.collection("events").get().then((querySnapshot) => {
+                    const batch = db.batch();
+                    querySnapshot.forEach((doc) => {
+                        batch.delete(doc.ref);
+                    });
+                    return batch.commit();
+                }).then(() => {
+                    loadAdminEvents();
+                    loadEditEvents();
+                    loadBookedEvents();
+                    calendar.refetchEvents();
+                    removeAllEventHighlights();
+                    deleteAllConfirmModal.hide();
+                    showToast('All events deleted successfully', 'success');
+                }).catch((error) => {
+                    console.error("Error deleting all events: ", error);
+                    showToast('Error deleting events', 'danger');
+                    // Show permission error
+                    $('#permissionError').removeClass('d-none');
+                    $('#editPermissionError').removeClass('d-none');
+                });
+            });
+            
+            // Event listener for delete buttons in admin panel (delegated)
+            $(document).on('click', '.delete-single-event', function() {
+                const eventId = $(this).data('id');
+                $('#confirmDeleteBtn').data('id', eventId);
+                deleteConfirmModal.show();
+            });
+            
+            // Event listener for edit buttons in edit meeting panel (delegated)
+            $(document).on('click', '.edit-single-event', function(e) {
+                e.preventDefault();
+                const eventId = $(this).data('id');
+                editEventFromAdmin(eventId);
+            });
+            
+            // Check permissions button in admin panel
+            $('#checkPermissionsBtn').click(function() {
+                // Test if we can write to the database
+                testDatabasePermissions();
+            });
+            
+            // Check permissions button in edit meeting panel
+            $('#editCheckPermissionsBtn').click(function() {
+                // Test if we can write to the database
+                testDatabasePermissions();
+            });
+            
+            // Confirm delete button
+            $('#confirmDeleteBtn').click(function() {
+                const eventId = $(this).data('id');
+                deleteEvent(eventId);
+                deleteConfirmModal.hide();
+            });
+            
+            // Toggle edit mode in view/edit modal
+            $('#toggleEditModeBtn').click(function() {
+                toggleEditMode();
+            });
+            
+            // Save edited event button
+            $('#saveEditEventBtn').click(function() {
+                saveEditedEvent();
+            });
+            
+            // When the view/edit modal is hidden, reset to view mode
+            $('#viewEditEventModal').on('hidden.bs.modal', function() {
+                resetViewEditModal();
+            });
+            
+            function toggleEditMode() {
+                isEditMode = !isEditMode;
+                
+                if (isEditMode) {
+                    // Switch to edit mode
+                    $('#viewEditEventModalLabel').text('Edit Event');
+                    $('#toggleEditModeBtn').html('<i class="fas fa-eye me-1"></i> View');
+                    $('#viewEditEventTitle').prop('readonly', false);
+                    $('#viewEditEventSection').prop('disabled', false);
+                    $('#viewEditStartTime').prop('readonly', false);
+                    $('#viewEditEndTime').prop('readonly', false);
+                    $('#viewEditEventNotes').prop('readonly', false);
+                    $('#saveEditEventBtn').show();
+                    $('#viewEditModalContent').removeClass('view-mode');
+                } else {
+                    // Switch to view mode
+                    $('#viewEditEventModalLabel').text('View Event Details');
+                    $('#toggleEditModeBtn').html('<i class="fas fa-edit me-1"></i> Edit');
+                    $('#viewEditEventTitle').prop('readonly', true);
+                    $('#viewEditEventSection').prop('disabled', true);
+                    $('#viewEditStartTime').prop('readonly', true);
+                    $('#viewEditEndTime').prop('readonly', true);
+                    $('#viewEditEventNotes').prop('readonly', true);
+                    $('#saveEditEventBtn').hide();
+                    $('#viewEditModalContent').addClass('view-mode');
+                }
+            }
+            
+            function resetViewEditModal() {
+                isEditMode = false;
+                $('#viewEditEventModalLabel').text('View Event Details');
+                $('#toggleEditModeBtn').html('<i class="fas fa-edit me-1"></i> Edit');
+                $('#viewEditEventTitle').prop('readonly', true);
+                $('#viewEditEventSection').prop('disabled', true);
+                $('#viewEditStartTime').prop('readonly', true);
+                $('#viewEditEndTime').prop('readonly', true);
+                $('#viewEditEventNotes').prop('readonly', true);
+                $('#saveEditEventBtn').hide();
+                $('#viewEditModalContent').addClass('view-mode');
+            }
+            
+            function openViewEditModal(eventId, eventData, isEditable) {
+                // Fill view/edit modal with event data
+                $('#viewEditEventId').val(eventId);
+                $('#viewEditEventTitle').val(eventData.title);
+                $('#viewEditEventSection').val(eventData.section);
+                $('#viewEditEventDate').val(eventData.date);
+                $('#viewEditDisplayDate').text(formatDisplayDate(eventData.date));
+                $('#viewEditStartTime').val(eventData.startTime);
+                $('#viewEditEndTime').val(eventData.endTime);
+                $('#viewEditEventNotes').val(eventData.notes || 'No notes');
+                
+                // Set edit mode based on parameter
+                if (isEditable) {
+                    $('#toggleEditModeBtn').show();
+                } else {
+                    $('#toggleEditModeBtn').hide();
+                }
+                
+                // Reset to view mode
+                resetViewEditModal();
+                
+                // Show the modal
+                viewEditEventModal.show();
+            }
+            
+            function saveEditedEvent() {
+                // Get form values
+                const eventId = $('#viewEditEventId').val();
+                const title = $('#viewEditEventTitle').val();
+                const section = $('#viewEditEventSection').val();
+                const date = $('#viewEditEventDate').val();
+                const startTime = $('#viewEditStartTime').val();
+                const endTime = $('#viewEditEndTime').val();
+                const notes = $('#viewEditEventNotes').val();
+                
+                // Validate that end time is after start time
+                if (startTime >= endTime) {
+                    alert('End time must be after start time');
+                    return;
+                }
+                
+                // Create event object
+                const event = {
+                    title: title,
+                    section: section,
+                    date: date,
+                    startTime: startTime,
+                    endTime: endTime,
+                    notes: notes,
+                    color: getSectionColor(section),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                
+                // Update event in Firestore
+                db.collection("events").doc(eventId).update(event)
+                    .then(() => {
+                        // Hide modal
+                        viewEditEventModal.hide();
+                        
+                        // Show confirmation toast
+                        showToast('Event updated successfully', 'success');
+                        
+                        // Reload events
+                        loadBookedEvents();
+                        loadAdminEvents();
+                        loadEditEvents();
+                        
+                        // Refresh calendar to show updated events
+                        calendar.refetchEvents();
+                    })
+                    .catch((error) => {
+                        console.error("Error updating event: ", error);
+                        showToast('Error updating event. Check database permissions.', 'danger');
+                        // Show permission error
+                        $('#permissionError').removeClass('d-none');
+                        $('#editPermissionError').removeClass('d-none');
+                    });
+            }
+            
+            function editEventFromAdmin(eventId) {
+                db.collection("events").doc(eventId).get()
+                    .then((doc) => {
+                        if (doc.exists) {
+                            const eventData = doc.data();
+                            openViewEditModal(doc.id, eventData, true);
+                        } else {
+                            showToast('Event not found', 'danger');
+                        }
+                    })
+                    .catch((error) => {
+                        console.error("Error getting event: ", error);
+                        showToast('Error loading event', 'danger');
+                    });
+            }
+            
+            function testDatabasePermissions() {
+                // Test if we can write to the database
+                const testDocRef = db.collection("test").doc("permission_test");
+                
+                testDocRef.set({
+                    test: "Testing write permissions",
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                })
+                .then(() => {
+                    showToast('Write permissions are working!', 'success');
+                    // Clean up the test document
+                    testDocRef.delete();
+                    $('#permissionError').addClass('d-none');
+                    $('#editPermissionError').addClass('d-none');
+                })
+                .catch((error) => {
+                    console.error("Permission test failed: ", error);
+                    showToast('Write permissions are NOT working!', 'danger');
+                    $('#permissionError').removeClass('d-none');
+                    $('#editPermissionError').removeClass('d-none');
+                });
+            }
+            
+            function saveEvent() {
+                // Get form values
+                const title = $('#eventTitle').val();
+                const section = $('#eventSection').val();
+                const date = $('#eventDate').val();
+                const startTime = $('#startTime').val();
+                const endTime = $('#endTime').val();
+                const notes = $('#eventNotes').val();
+                const eventId = $('#eventId').val();
+                
+                // Create event object
+                const event = {
+                    title: title,
+                    section: section,
+                    date: date,
+                    startTime: startTime,
+                    endTime: endTime,
+                    notes: notes,
+                    color: getSectionColor(section),
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                
+                if (eventId) {
+                    // Update existing event
+                    db.collection("events").doc(eventId).update(event)
+                        .then(() => {
+                            // Hide modal
+                            eventModal.hide();
+                            
+                            // Show confirmation toast
+                            showToast('Event updated successfully', 'success');
+                            
+                            // Reload events
+                            loadBookedEvents();
+                            loadAdminEvents();
+                            loadEditEvents();
+                            
+                            // Refresh calendar to show booked day highlight
+                            calendar.refetchEvents();
+                        })
+                        .catch((error) => {
+                            console.error("Error updating event: ", error);
+                            showToast('Error updating event. Check database permissions.', 'danger');
+                            // Show permission error
+                            $('#permissionError').removeClass('d-none');
+                            $('#editPermissionError').removeClass('d-none');
+                        });
+                } else {
+                    // Add new event
+                    db.collection("events").add(event)
+                        .then(() => {
+                            // Hide modal
+                            eventModal.hide();
+                            
+                            // Show confirmation toast
+                            showToast('Event saved successfully', 'success');
+                            
+                            // Reload events
+                            loadBookedEvents();
+                            loadAdminEvents();
+                            loadEditEvents();
+                            
+                            // Refresh calendar to show booked day highlight
+                            calendar.refetchEvents();
+                        })
+                        .catch((error) => {
+                            console.error("Error adding event: ", error);
+                            showToast('Error saving event. Check database permissions.', 'danger');
+                            // Show permission error
+                            $('#permissionError').removeClass('d-none');
+                            $('#editPermissionError').removeClass('d-none');
+                        });
+                }
+            }
+            
+            function loadBookedEvents() {
+                db.collection("events")
+                    .orderBy("createdAt", "desc")
+                    .get()
+                    .then((querySnapshot) => {
+                        const bookedDatesList = $('#bookedDatesList');
+                        
+                        if (querySnapshot.empty) {
+                            bookedDatesList.html(`
+                                <div class="empty-state text-center py-5">
+                                    <i class="far fa-calendar-check fa-4x mb-3"></i>
+                                    <p class="lead">No events booked yet. Click on a date to add an event.</p>
+                                </div>
+                            `);
+                            calendar.refetchEvents();
+                            return;
+                        }
+                        
+                        // Clear existing content
+                        bookedDatesList.empty();
+                        
+                        // Group events by date
+                        const eventsByDate = {};
+                        querySnapshot.forEach((doc) => {
+                            const event = doc.data();
+                            if (!eventsByDate[event.date]) {
+                                eventsByDate[event.date] = [];
+                            }
+                            eventsByDate[event.date].push({...event, id: doc.id});
+                        });
+                        
+                        // Display events
+                        for (const date in eventsByDate) {
+                            if (eventsByDate.hasOwnProperty(date)) {
+                                const dateEvents = eventsByDate[date];
+                                const dateHeader = `<h5 class="mt-4 mb-3">${formatDate(date)}</h5>`;
+                                bookedDatesList.append(dateHeader);
+                                
+                                dateEvents.forEach((event) => {
+                                    const eventCard = `
+                                        <div class="card mb-3 event-card section-${event.section} animate__animated animate__fadeIn">
+                                            <div class="card-body">
+                                                <div class="d-flex justify-content-between">
+                                                    <div>
+                                                        <h5 class="card-title">${event.title}</h5>
+                                                        <h6 class="card-subtitle mb-2 text-muted">
+                                                            <i class="far fa-clock me-1"></i> ${formatTime(event.startTime)} - ${formatTime(event.endTime)}
+                                                        </h6>
+                                                    </div>
+                                                    <span class="badge bg-${getSectionBadgeClass(event.section)}">
+                                                        ${capitalizeFirstLetter(event.section)}
+                                                    </span>
+                                                </div>
+                                                ${event.notes ? `<p class="card-text mt-2">${event.notes}</p>` : ''}
+                                            </div>
+                                        </div>
+                                    `;
+                                    bookedDatesList.append(eventCard);
+                                });
+                            }
+                        }
+                        
+                        // Refresh calendar to show booked day highlight
+                        calendar.refetchEvents();
+                    })
+                    .catch((error) => {
+                        console.error("Error getting events: ", error);
+                        bookedDatesList.html(`
+                            <div class="alert alert-danger">
+                                <i class="fas fa-exclamation-triangle me-2"></i> Error loading events. Please check your connection and try again.
+                            </div>
+                        `);
+                    });
+            }
+            
+            function loadAdminEvents() {
+                db.collection("events")
+                    .orderBy("createdAt", "desc")
+                    .get()
+                    .then((querySnapshot) => {
+                        const adminEventsTable = $('#adminEventsTable');
+                        const adminEmptyState = $('#adminEmptyState');
+                        
+                        // Clear existing content
+                        adminEventsTable.empty();
+                        
+                        if (querySnapshot.empty) {
+                            adminEmptyState.removeClass('d-none');
+                            return;
+                        }
+                        
+                        adminEmptyState.addClass('d-none');
+                        
+                        // Display events in table
+                        querySnapshot.forEach((doc) => {
+                            const event = doc.data();
+                            const row = `
+                                <tr class="animate__animated animate__fadeIn">
+                                    <td>${event.title}</td>
+                                    <td><span class="badge bg-${getSectionBadgeClass(event.section)}">${capitalizeFirstLetter(event.section)}</span></td>
+                                    <td>${formatDate(event.date)}</td>
+                                    <td>${formatTime(event.startTime)}</td>
+                                    <td>${formatTime(event.endTime)}</td>
+                                    <td>${event.notes || '-'}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-danger delete-single-event" data-id="${doc.id}">
+                                            <i class="far fa-trash-alt me-1"></i> Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                            `;
+                            adminEventsTable.append(row);
+                        });
+                    })
+                    .catch((error) => {
+                        console.error("Error getting events: ", error);
+                        $('#adminEventsTable').html(`
+                            <tr>
+                                <td colspan="7" class="text-center py-4">
+                                    <div class="alert alert-danger">
+                                        <i class="fas fa-exclamation-triangle me-2"></i> Error loading events. Please check your connection and try again.
+                                    </div>
+                                </td>
+                            </tr>
+                        `);
+                    });
+            }
+            
+            function loadEditEvents() {
+                db.collection("events")
+                    .orderBy("createdAt", "desc")
+                    .get()
+                    .then((querySnapshot) => {
+                        const editEventsTable = $('#editEventsTable');
+                        const editEmptyState = $('#editEmptyState');
+                        
+                        // Clear existing content
+                        editEventsTable.empty();
+                        
+                        if (querySnapshot.empty) {
+                            editEmptyState.removeClass('d-none');
+                            return;
+                        }
+                        
+                        editEmptyState.addClass('d-none');
+                        
+                        // Display events in table
+                        querySnapshot.forEach((doc) => {
+                            const event = doc.data();
+                            const row = `
+                                <tr class="animate__animated animate__fadeIn">
+                                    <td>${event.title}</td>
+                                    <td><span class="badge bg-${getSectionBadgeClass(event.section)}">${capitalizeFirstLetter(event.section)}</span></td>
+                                    <td>${formatDate(event.date)}</td>
+                                    <td>${formatTime(event.startTime)}</td>
+                                    <td>${formatTime(event.endTime)}</td>
+                                    <td>${event.notes || '-'}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary edit-single-event" data-id="${doc.id}">
+                                            <i class="fas fa-edit me-1"></i> Edit
+                                        </button>
+                                    </td>
+                                </tr>
+                            `;
+                            editEventsTable.append(row);
+                        });
+                    })
+                    .catch((error) => {
+                        console.error("Error getting events: ", error);
+                        $('#editEventsTable').html(`
+                            <tr>
+                                <td colspan="7" class="text-center py-4">
+                                    <div class="alert alert-danger">
+                                        <i class="fas fa-exclamation-triangle me-2"></i> Error loading events. Please check your connection and try again.
+                                    </div>
+                                </td>
+                            </tr>
+                        `);
+                    });
+            }
+            
+            function deleteEvent(eventId) {
+                db.collection("events").doc(eventId).delete()
+                    .then(() => {
+                        loadBookedEvents();
+                        loadAdminEvents();
+                        loadEditEvents();
+                        calendar.refetchEvents();
+                        removeEventHighlights();
+                        showToast('Event deleted successfully', 'success');
+                    })
+                    .catch((error) => {
+                        console.error("Error removing event: ", error);
+                        showToast('Error deleting event. Check database permissions.', 'danger');
+                        // Show permission error
+                        $('#permissionError').removeClass('d-none');
+                        $('#editPermissionError').removeClass('d-none');
+                    });
+            }
+            
+            function removeEventHighlights() {
+                // Remove all highlight classes from calendar days
+                document.querySelectorAll('.fc-daygrid-day-has-events').forEach(function(dayEl) {
+                    dayEl.classList.remove('fc-daygrid-day-has-events');
+                });
+            }
+            
+            function removeAllEventHighlights() {
+                // Remove all highlight classes from calendar days
+                document.querySelectorAll('.fc-daygrid-day-has-events').forEach(function(dayEl) {
+                    dayEl.classList.remove('fc-daygrid-day-has-events');
+                });
+                // Also remove the frame highlights
+                document.querySelectorAll('.fc-daygrid-day-has-events .fc-daygrid-day-frame').forEach(function(frameEl) {
+                    frameEl.style.backgroundColor = '';
+                });
+                // Remove the number highlights
+                document.querySelectorAll('.fc-daygrid-day-has-events .fc-daygrid-day-number').forEach(function(numEl) {
+                    numEl.style.fontWeight = '';
+                    numEl.style.color = '';
+                });
+            }
+            
+            function showToast(message, type) {
+                const toastEl = document.getElementById('successToast');
+                const toastBody = document.getElementById('successToastBody');
+                
+                // Set toast color based on type
+                const toastHeader = toastEl.querySelector('.toast-header');
+                toastHeader.className = 'toast-header text-white';
+                
+                if (type === 'success') {
+                    toastHeader.classList.add('bg-success');
+                } else if (type === 'info') {
+                    toastHeader.classList.add('bg-info');
+                } else if (type === 'warning') {
+                    toastHeader.classList.add('bg-warning');
+                } else if (type === 'danger') {
+                    toastHeader.classList.add('bg-danger');
+                }
+                
+                toastBody.textContent = message;
+                const toast = new bootstrap.Toast(toastEl);
+                toast.show();
+            }
+            
+            function formatDisplayDate(dateStr) {
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                return new Date(dateStr).toLocaleDateString('en-US', options);
+            }
+            
+            function formatDate(dateStr) {
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                return new Date(dateStr).toLocaleDateString('en-US', options);
+            }
+            
+            function formatTime(timeStr) {
+                if (!timeStr) return 'N/A';
+                
+                const timeParts = timeStr.split(':');
+                const hours = parseInt(timeParts[0]);
+                const minutes = timeParts[1];
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                const formattedHours = hours % 12 || 12; // the hour '0' should be '12'
+                return `${formattedHours}:${minutes} ${ampm}`;
+            }
+            
+            function capitalizeFirstLetter(string) {
+                return string.charAt(0).toUpperCase() + string.slice(1);
+            }
+            
+            function getSectionColor(section) {
+                if (section === 'work') return '#e74a3b';
+                if (section === 'personal') return '#1cc88a';
+                if (section === 'meeting') return '#f6c23e';
+                if (section === 'AGM(OS&M)') return '#9b59b6';
+                return '#4e73df';
+            }
+            
+            function getSectionBadgeClass(section) {
+                if (section === 'work') return 'danger';
+                if (section === 'personal') return 'success';
+                if (section === 'meeting') return 'warning';
+                if (section === 'AGM(OS&M)') return 'info';
+                return 'primary';
+            }
+            
+            // Test database permissions on page load
+            setTimeout(testDatabasePermissions, 2000);
+        });
+    </script>
+</body>
+</html>
